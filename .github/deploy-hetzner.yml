@@ -3,7 +3,7 @@ name: Deploy Hetzner PROD
 on:
   push:
     branches:
-      - hetzner/*
+      - hetzner
 
 concurrency:
   group: deploy-hetzner-${{ github.ref }}
