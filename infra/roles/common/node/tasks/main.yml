@@ -1,0 +1,10 @@
+- name: Check if node is installed
+  shell: node -v
+  register: node_installed
+  ignore_errors: True
+  check_mode: False
+  changed_when: False
+
+- name: Install node
+  when: node_installed.rc != 0
+  include_tasks: install-node.yml

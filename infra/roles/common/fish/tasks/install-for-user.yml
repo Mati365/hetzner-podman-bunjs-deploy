@@ -1,0 +1,17 @@
+- name: Set default shell
+  command: usermod --shell /bin/fish {{ user.name }}
+
+- name: Disable initial fish message
+  become_user: '{{ user.name }}'
+  shell:
+    executable: /bin/fish
+    cmd: set -U fish_greeting ""
+
+- name: Check if oh-my-fish is installed
+  stat:
+    path: '~{{ user.name }}/.local/share/omf'
+  register: omf_config_dir
+
+- name: Install oh-my-fish
+  when: not omf_config_dir.stat.exists
+  include_tasks: install-omf-for-user.yml

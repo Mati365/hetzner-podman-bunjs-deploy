@@ -1,0 +1,81 @@
+- name: Ensure letsencrypt volume dir is present
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: deploy
+    group: deploy
+    mode: '0755'
+  loop:
+    - '{{ remote_paths.volumes_path }}/letsencrypt'
+    - '{{ remote_paths.volumes_path }}/letsencrypt/www'
+    - '{{ remote_paths.volumes_path }}/letsencrypt/conf'
+    - '{{ remote_paths.volumes_path }}/letsencrypt/conf/live/{{ website.domain }}'
+    - '{{ remote_paths.volumes_path }}/letsencrypt/log'
+
+- name: Check if there is already cert file
+  stat:
+    path: '{{ remote_paths.volumes_path }}/letsencrypt/conf/live/{{ website.domain }}/privkey.pem'
+  register: cert_key_file
+
+- name: Create temp self-signed certificate
+  when: not cert_key_file.stat.exists
+  become_user: deploy
+  shell: |
+    openssl req -x509 -nodes -subj '/CN={{ website.domain }}' -days 365 -newkey rsa:4096 -sha256 -keyout {{ item.key }} -out {{ item.cert }} creates={{ item.cert }}
+  with_items:
+    - key: '{{ remote_paths.volumes_path }}/letsencrypt/conf/live/{{ website.domain }}/privkey.pem'
+      cert: '{{ remote_paths.volumes_path }}/letsencrypt/conf/live/{{ website.domain }}/fullchain.pem'
+
+- name: Create temp config indicator
+  when: not cert_key_file.stat.exists
+  become_user: deploy
+  file:
+    path: '{{ remote_paths.volumes_path }}/letsencrypt/temp-conf'
+    state: touch
+
+- name: Add letsencrypt logrotate script
+  blockinfile:
+    create: true
+    path: /etc/logrotate.d/letsencrypt-log
+    block: |
+      {{ remote_paths.volumes_path }}/letsencrypt/log/*.log {
+        su deploy deploy
+        maxsize 100M
+        rotate 7
+        copytruncate
+        notifempty
+        missingok
+        compress
+        delaycompress
+      }
+
+- name: Renew SSL service is present in systemd
+  template:
+    src: renew-ssl.service.j2
+    dest: ~deploy/.config/systemd/user/renew-ssl.service
+    mode: 0644
+
+- name: Renew SSL timer is present in systemd
+  template:
+    src: renew-ssl.timer.j2
+    dest: ~deploy/.config/systemd/user/renew-ssl.timer
+    mode: 0644
+
+- name: Enable renew ssl service
+  become_user: deploy
+  when: website.ssl
+  systemd:
+    name: renew-ssl.service
+    scope: user
+    enabled: true
+    daemon_reload: true
+
+- name: Enable renew ssl timer
+  become_user: deploy
+  when: website.ssl
+  systemd:
+    name: renew-ssl.timer
+    state: started
+    scope: user
+    enabled: true
+    daemon_reload: true

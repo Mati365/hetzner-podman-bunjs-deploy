@@ -1,0 +1,12 @@
+[Unit]
+Description=Removes podman dangling images
+Wants=remove-dangling-images.timer
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/remove-dangling-images.sh
+User=deploy
+Group=deploy
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+- name: Install fish if not exists
+  package:
+    name: fish
+    state: present
+
+- name: Install fish local user config for all users
+  include_tasks: install-for-user.yml
+  loop: '{{ all_users }}'
+  loop_control:
+    loop_var: user
+
+- name: Ensure CI user is not using fish shell
+  user:
+    name: ci
+    shell: /bin/bash

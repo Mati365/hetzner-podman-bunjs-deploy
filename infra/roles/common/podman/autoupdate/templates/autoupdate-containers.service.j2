@@ -1,0 +1,11 @@
+[Unit]
+Description=Autoupdates containers
+Wants=autoupdate-containers.timer
+
+[Service]
+Type=oneshot
+ExecStartPre=podman login -u={{ podman.registry.credentials.username }} -p={{ podman.registry.credentials.password }}
+ExecStart=podman auto-update
+
+[Install]
+WantedBy=multi-user.target

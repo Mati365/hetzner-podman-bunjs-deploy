@@ -1,0 +1,57 @@
+- name: Ensure app-frontend volume dir is present
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: deploy
+    group: deploy
+    mode: '0774'
+  loop:
+    - '{{ remote_paths.volumes_path }}/app-frontend'
+
+- name: app-frontend envs are synced
+  register: app_frontend_env_file
+  template:
+    src: '{{ local_paths.envs_dir }}/frontend.env'
+    dest: '{{ remote_paths.volumes_path }}/app-frontend/frontend.env'
+    owner: deploy
+    group: deploy
+    mode: 0644
+
+- name: Ensure app-frontend.container exists
+  become_user: deploy
+  register: app_frontend_container_file
+  blockinfile:
+    path: ~/.config/containers/systemd/app-frontend.container
+    create: true
+    block: |
+      [Unit]
+      Description=The app-frontend container
+      After=local-fs.target
+      StartLimitIntervalSec=5
+
+      [Container]
+      Image=0.0.0.0:5000/app-frontend:latest
+      LogDriver=journald
+      Label=io.containers.autoupdate=registry
+      Network=host
+
+      Environment=APP_ENV=production
+      EnvironmentFile={{ remote_paths.volumes_path }}/app-frontend/frontend.env
+
+      [Service]
+      TimeoutStartSec=15
+      Restart=always
+      RestartSec=8
+
+      [Install]
+      WantedBy=default.target
+
+- name: Ensure app-frontend service works
+  become_user: deploy
+  ignore_errors: yes
+  systemd:
+    scope: user
+    name: app-frontend
+    state: '{{ "restarted" if app_frontend_container_file.changed or app_frontend_env_file.changed else "started" }}'
+    enabled: true
+    daemon_reload: true

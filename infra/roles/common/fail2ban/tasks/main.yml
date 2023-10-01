@@ -1,0 +1,40 @@
+- name: Install basic fail2ban packages
+  package:
+    name: fail2ban
+    state: present
+
+- name: Sync fail2ban config files
+  register: fail2ban_conf
+  copy:
+    src: conf/
+    dest: /etc/fail2ban
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - Restart fail2ban
+
+- name: Ensure fail2ban systemd override dir present
+  file:
+    path: /etc/systemd/system/fail2ban.service.d
+    state: directory
+    mode: '0755'
+
+- name: Override fail2ban config to start after nftables
+  blockinfile:
+    create: true
+    path: /etc/systemd/system/fail2ban.service.d/override.conf
+    block: |
+      [Unit]
+      Requires=nftables.service
+      PartOf=nftables.service
+
+      [Install]
+      WantedBy=multi-user.target nftables.service
+
+- name: Restart fail2ban
+  systemd:
+    name: fail2ban
+    state: restarted
+    enabled: true
+    daemon_reload: true

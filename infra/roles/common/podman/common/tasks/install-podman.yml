@@ -1,0 +1,21 @@
+- name: Add Podman GPG keys
+  apt_key:
+    url: https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/Debian_Testing/Release.key
+    state: present
+
+- name: Add Podman repo
+  apt_repository:
+    repo: 'deb https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/Debian_Testing/ /'
+    state: present
+
+- name: Update repos
+  apt:
+    update_cache: yes
+
+- name: Podman is installed
+  package:
+    state: present
+    name:
+      - podman
+      - uidmap
+      - dbus-x11

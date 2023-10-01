@@ -1,0 +1,35 @@
+- name: Copy remove dangling images script
+  copy:
+    src: remove-dangling-images.sh
+    dest: /usr/bin/
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Copy remove dangling images service
+  copy:
+    src: remove-dangling-images.service
+    dest: /lib/systemd/system/
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy remove dangling images timer
+  copy:
+    src: remove-dangling-images.timer
+    dest: /lib/systemd/system/
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Enable remove dangling images service
+  systemd:
+    name: remove-dangling-images.service
+    enabled: true
+    daemon_reload: true
+
+- name: Enable remove dangling images timer
+  systemd:
+    name: remove-dangling-images.timer
+    state: restarted
+    enabled: true

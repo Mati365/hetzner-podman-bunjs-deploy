@@ -1,0 +1,7 @@
+{
+  "name": "app-frontend",
+  "license": "MIT",
+  "devDependencies": {
+    "bun-types": "^1.0.3"
+  }
+}

@@ -1,0 +1,14 @@
+proxy_ignore_headers Set-Cookie;
+proxy_buffers 32 4m;
+proxy_busy_buffers_size 32m;
+proxy_buffer_size 512k;
+proxy_max_temp_file_size 0;
+proxy_cache_revalidate on;
+proxy_intercept_errors on;
+proxy_cache public_cache;
+proxy_cache_valid 200 24h;
+proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+proxy_cache_lock on;
+proxy_cache_bypass $http_cache_purge;
+add_header X-Cache-Status $upstream_cache_status;
+access_log off;

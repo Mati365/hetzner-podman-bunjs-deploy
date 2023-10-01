@@ -1,0 +1,46 @@
+- hosts: localhost
+  roles:
+    - role: provision
+      when: hcloud.provision is defined and hcloud.provision|bool == True
+
+- hosts: web
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        delay: 2
+        timeout: 10000
+
+# Utils
+- hosts: web
+  gather_facts: true
+  become: true
+  roles:
+    - role: common/sysctl
+    - role: common/utils
+    - role: common/unattended-upgrades
+    - role: common/firewall
+    - role: common/sshd
+    - role: common/users
+    - role: common/fish
+    - role: common/fail2ban
+    - role: common/node
+    - role: common/podman/common
+    - role: common/podman/registry
+    - role: common/podman/remove-dangling-images
+    - role: common/podman/autoupdate
+
+# Services
+- hosts: web
+  gather_facts: true
+  become: true
+  roles:
+    - role: services/letsencrypt
+    - role: services/nginx
+
+# Apps
+- hosts: web
+  gather_facts: true
+  become: true
+  roles:
+    - role: apps/frontend

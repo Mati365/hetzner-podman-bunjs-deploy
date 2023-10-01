@@ -1,0 +1,26 @@
+- name: Check if podman is installed
+  shell: podman -v
+  register: podman_installed
+  ignore_errors: True
+  check_mode: False
+  changed_when: False
+
+- name: Install podman
+  when: podman_installed.rc != 0
+  include_tasks: install-podman.yml
+
+- name: Ensure volumes dir is present
+  file:
+    path: '{{ remote_paths.volumes_path }}'
+    state: directory
+    owner: deploy
+    group: deploy
+    mode: '0770'
+
+- name: Copy registries config
+  template:
+    src: registries.conf.j2
+    dest: /etc/containers/registries.conf
+    owner: deploy
+    group: deploy
+    mode: '0750'

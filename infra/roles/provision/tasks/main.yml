@@ -1,0 +1,79 @@
+- name: Root SSH key is present
+  hetzner.hcloud.hcloud_ssh_key:
+    api_token: '{{ hcloud.token }}'
+    name: app-root-key
+    public_key: "{{ lookup('file', local_paths.keys_dir + '/ansible/id_rsa.pub') }}"
+    state: present
+
+- name: App firewall is present
+  hetzner.hcloud.hcloud_firewall:
+    api_token: '{{ hcloud.token }}'
+    name: app-firewall
+    state: present
+    rules:
+      - direction: in
+        port: 80
+        protocol: tcp
+        source_ips:
+          - 0.0.0.0/0
+          - ::/0
+
+      - direction: in
+        port: 443
+        protocol: tcp
+        source_ips:
+          - 0.0.0.0/0
+          - ::/0
+
+      - direction: in
+        port: 22
+        protocol: tcp
+        source_ips:
+          - 0.0.0.0/0
+          - ::/0
+
+- name: App server primary IP
+  hetzner.hcloud.hcloud_primary_ip:
+    api_token: '{{ hcloud.token }}'
+    name: app-primary-ip
+    datacenter: fsn1-dc14
+    type: ipv4
+    state: present
+  register: app_ip
+
+- name: App server is present
+  hetzner.hcloud.hcloud_server:
+    api_token: '{{ hcloud.token }}'
+    state: present
+    name: app-server
+    server_type: cax11
+    image: debian-12
+    location: fsn1
+    delete_protection: true
+    rebuild_protection: true
+    enable_ipv4: true
+    enable_ipv6: false
+    ipv4: '{{ app_ip.hcloud_primary_ip.id }}'
+    backups: true
+    firewalls:
+      - app-firewall
+    ssh_keys:
+      - app-root-key
+    user_data: |
+      #cloud-config
+      users:
+        - name: ansible
+          groups: users, admin
+          sudo: ALL=(ALL) NOPASSWD:ALL
+          shell: /bin/bash
+          home: /home/ansible
+          ssh_authorized_keys:
+            - {{ lookup('file', local_paths.keys_dir + '/ansible/id_rsa.pub') }}
+
+  register: app_server
+
+- name: Add server to hosts
+  add_host:
+    hostname: '{{ app_server.hcloud_server.ipv4_address }}'
+    groups:
+      - web

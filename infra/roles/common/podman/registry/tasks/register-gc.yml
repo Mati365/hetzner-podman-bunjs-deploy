@@ -1,0 +1,32 @@
+- name: Copy registry gc service
+  copy:
+    src: registry-gc.service
+    dest: ~deploy/.config/systemd/user/
+    owner: deploy
+    group: deploy
+    mode: 0644
+
+- name: Copy registry gc timer
+  copy:
+    src: registry-gc.timer
+    dest: ~deploy/.config/systemd/user/
+    owner: deploy
+    group: deploy
+    mode: 0644
+
+- name: Enable registry gc service
+  become_user: deploy
+  systemd:
+    name: registry-gc.service
+    enabled: true
+    scope: user
+    daemon_reload: true
+
+- name: Enable registry gc timer
+  become_user: deploy
+  systemd:
+    name: registry-gc.timer
+    state: restarted
+    scope: user
+    enabled: true
+    daemon_reload: true
