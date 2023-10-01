@@ -4,6 +4,19 @@ on:
   push:
     branches:
       - hetzner
+  workflow_dispatch:
+    inputs:
+      infra_deploy:
+        description: Infra deploy
+        type: boolean
+        required: false
+        default: false
+
+      apps_deploy:
+        description: Apps deploy
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: deploy-hetzner-${{ github.ref }}
@@ -21,6 +34,7 @@ env:
 jobs:
   changes:
     runs-on: ubuntu-latest
+    if: github.event.inputs.apps_deploy != 'true' && github.event.inputs.infra_deploy != 'true'
     outputs:
       apps: ${{ steps.changes.outputs.apps }}
       infra: ${{ steps.changes.outputs.infra }}
@@ -41,7 +55,9 @@ jobs:
   configure:
     runs-on: ubuntu-latest
     needs: [changes]
-    if: always() && needs.changes.outputs.infra == 'true'
+    if: |
+      always()
+        && (needs.changes.outputs.infra == 'true' || github.event.inputs.infra_deploy == 'true')
 
     timeout-minutes: 35
     steps:
@@ -76,7 +92,7 @@ jobs:
     needs: [changes, configure]
     if: |
       always()
-        && needs.changes.outputs.apps == 'true'
+        && (needs.changes.outputs.apps == 'true' || github.event.inputs.apps_deploy == 'true')
         && (needs.configure.result == 'success' || needs.configure.result == 'skipped')
     steps:
       - name: Checkout repository
