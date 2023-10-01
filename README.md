@@ -1,5 +1,10 @@
 # hetzner-podman-node-deploy
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/mati365/hetzner-podman-node-deploy?style=flat-square)
+![GitHub issues](https://img.shields.io/github/issues/mati365/hetzner-podman-node-deploy?style=flat-square)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+
 Example of standalone Bun.js application deployment to Hetzner Cloud using Rootless Podman Quadlet systemd services
 
 ## Description
