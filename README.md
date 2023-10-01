@@ -21,7 +21,7 @@ The infrastructure consists of:
 
 ## How to run it?
 
-1. Go to create project on hetzner.com, add primary IP named `app-primary-ip`
+1. Create empty project on hetzner.com, add primary IP named `app-primary-ip`
 2. Point your DNS to `app-primary-ip` IPv4 address
 3. Set these secrets to registry:
 
