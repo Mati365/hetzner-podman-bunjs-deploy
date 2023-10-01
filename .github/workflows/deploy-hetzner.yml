@@ -26,10 +26,10 @@ env:
   ANSIBLE_FORCE_COLOR: true
   TARGET_PLATFORMS: linux/arm64
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 2
-  HCLOUD_KEY: '{{ secrets.HCLOUD_KEY }}'
-  REGISTRY_PASSWORD: '{{ secrets.REGISTRY_PASSWORD }}'
-  REGISTRY_USERNAME: '{{ secrets.REGISTRY_USERNAME }}'
-  WEBSITE_DOMAIN: '{{ secrets.WEBSITE_DOMAIN }}'
+  HCLOUD_KEY: ${{ secrets.HCLOUD_KEY }}
+  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+  REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+  WEBSITE_DOMAIN: ${{ secrets.WEBSITE_DOMAIN }}
 
 jobs:
   changes:
@@ -98,13 +98,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v3
+      - uses: oven-sh/setup-bun@v1
         with:
-          node-version: "20"
-          cache: "yarn"
+          bun-version: latest
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile --prefer-offline --production=false
+        run: bun install
 
       - name: Turbo Cache
         uses: actions/cache@v3
@@ -115,7 +114,7 @@ jobs:
             turbo-${{ github.job }}-${{ github.ref_name }}-
 
       - name: Build packages
-        run: yarn build
+        run: bunx turbo build
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -126,7 +125,7 @@ jobs:
       - name: Login to registry
         uses: docker/login-action@v2
         with:
-          registry: ${{ needs.branch_meta.outputs.site_name }}.p8curio.com
+          registry: ${{ secrets.WEBSITE_DOMAIN }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
@@ -141,9 +140,9 @@ jobs:
       - name: Push frontend
         uses: docker/build-push-action@v4
         with:
-          context: "apps/frontend"
+          context: apps/frontend
           push: true
-          tags: ${{ needs.branch_meta.outputs.site_name }}.p8curio.com/surveys-frontend:latest
+          tags: ${{ secrets.WEBSITE_DOMAIN }}/app-frontend:latest
           platforms: ${{ env.TARGET_PLATFORMS }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new

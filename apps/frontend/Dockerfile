@@ -1,5 +1,5 @@
 FROM oven/bun:latest
 
-COPY src ./
+COPY dist/ ./
 
-CMD ["bun", "src/main.ts"]
+CMD ["bun", "main.js"]
