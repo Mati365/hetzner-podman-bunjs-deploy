@@ -1,0 +1,40 @@
+- name: Create user groups
+  group:
+    name: '{{ item.name }}'
+    state: present
+  with_items: '{{ all_groups }}'
+
+- name: Create basic users accounts
+  user:
+    name: '{{ item.name }}'
+    groups: '{{ item.groups }}'
+    shell: /bin/bash
+    append: yes
+  with_items: '{{ all_users }}'
+
+- name: sudo without password for wheel group
+  copy:
+    content: '%wheel ALL=(ALL:ALL) NOPASSWD:ALL'
+    dest: /etc/sudoers.d/wheel-nopasswd
+    mode: 0440
+
+- name: Add SSH authorized keys to users
+  include_tasks: copy-auth-keys-for-user.yml
+  loop: '{{ all_users }}'
+  loop_control:
+    loop_var: user
+
+- name: Disable login messages
+  become_user: '{{ user.name }}'
+  file:
+    path: '~{{ user.name }}/.hushlogin'
+    state: touch
+  loop: '{{ all_users }}'
+  loop_control:
+    loop_var: user
+
+- name: DBUS is persistent for user
+  include_tasks: persistent-dbus-for-user.yml
+  loop: '{{ all_users }}'
+  loop_control:
+    loop_var: user

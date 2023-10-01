@@ -1,0 +1,20 @@
+- name: Ensure installers folder exists
+  become_user: '{{ user.name }}'
+  file:
+    path: ~{{ user.name }}/installers
+    state: directory
+
+- name: Download shell extensions
+  become_user: '{{ user.name }}'
+  get_url:
+    url: https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install
+    dest: ~{{ user.name }}/installers/omf.sh
+
+- name: Adding +x to omf installer
+  file: dest=~{{ user.name }}/installers/omf.sh mode=a+x
+
+- name: Execute shell extensions
+  become_user: '{{ user.name }}'
+  shell:
+    executable: /bin/fish
+    cmd: ~{{ user.name }}/installers/omf.sh --noninteractive --yes --path=~/.local/share/omf --config=~/.config/omf

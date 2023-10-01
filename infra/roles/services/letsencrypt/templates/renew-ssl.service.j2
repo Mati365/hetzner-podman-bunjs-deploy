@@ -1,0 +1,16 @@
+[Unit]
+Description=Renew SSL
+Wants=renew-ssl.timer
+
+[Service]
+Type=oneshot
+ExecStart= podman run \
+  --rm \
+  -v {{ remote_paths.volumes_path }}/letsencrypt/www:/var/www/certbot/:rw \
+  -v {{ remote_paths.volumes_path }}/letsencrypt/conf:/etc/letsencrypt/:rw \
+  -v {{ remote_paths.volumes_path }}/letsencrypt/log:/var/log/letsencrypt/:rw \
+  certbot/certbot:latest renew
+ExecStartPost=podman kill -s SIGHUP systemd-nginx
+
+[Install]
+WantedBy=multi-user.target

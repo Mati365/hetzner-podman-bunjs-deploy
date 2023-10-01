@@ -1,0 +1,18 @@
+- name: nftables is present
+  package:
+    name: nftables
+    state: present
+
+- name: nftables config is synced
+  template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: nftables service is started
+  service:
+    name: nftables
+    state: restarted
+    enabled: true

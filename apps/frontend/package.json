@@ -1,0 +1,7 @@
+{
+  "name": "app-frontend",
+  "license": "MIT",
+  "scripts": {
+    "build": "bun build src/main.ts --outdir dist"
+  }
+}

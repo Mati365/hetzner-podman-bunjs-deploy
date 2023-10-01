@@ -1,0 +1,12 @@
+[Unit]
+Description=Timer for remove podman dangling images service
+Requires=remove-dangling-images.service
+
+[Timer]
+Persistent=true
+OnBootSec=120
+OnCalendar=*-*-* 0:10:00
+Unit=remove-dangling-images.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,118 @@
+- name: Ensure nginx volume dir is present
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: deploy
+    group: deploy
+    mode: "0755"
+  loop:
+    - "{{ remote_paths.volumes_path }}/nginx"
+    - "{{ remote_paths.volumes_path }}/nginx/log"
+    - "{{ remote_paths.volumes_path }}/nginx/scripts"
+
+- name: Symlink whole directory
+  ansible.builtin.file:
+    src: "{{ remote_paths.volumes_path }}/nginx/log"
+    dest: /var/log/nginx
+    owner: deploy
+    group: deploy
+    state: link
+    force: true
+
+- name: Nginx config is synced
+  register: nginx_root_config
+  vars:
+    ssl_enabled: "{{ website.ssl }}"
+  template:
+    src: nginx.conf.j2
+    dest: "{{ remote_paths.volumes_path }}/nginx/nginx.conf"
+    owner: deploy
+    group: deploy
+    mode: 0644
+
+- name: Nginx includes config is synced
+  register: nginx_nested_config
+  vars:
+    ssl_enabled: "{{ website.ssl }}"
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: deploy
+    group: deploy
+    mode: 0644
+  loop:
+    - {
+        src: "nginx-assets-proxy.conf.j2",
+        dest: "{{ remote_paths.volumes_path }}/nginx/nginx-assets-proxy.conf",
+      }
+    - {
+        src: "nginx-server-content.conf.j2",
+        dest: "{{ remote_paths.volumes_path }}/nginx/nginx-server-content.conf",
+      }
+
+- name: Ensure nginx.container exists
+  become_user: deploy
+  register: nginx_container_file
+  blockinfile:
+    path: ~/.config/containers/systemd/nginx.container
+    create: true
+    block: |
+      [Unit]
+      Description=The nginx container
+      After=local-fs.target
+      StartLimitIntervalSec=5
+
+      [Container]
+      Image=nginxinc/nginx-unprivileged:latest
+      LogDriver=journald
+
+      Network=host
+      UserNS=keep-id:uid=101,gid=10
+      Volume={{ remote_paths.volumes_path }}/nginx/log:/var/log/nginx:rw
+      Volume={{ remote_paths.volumes_path }}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      Volume={{ remote_paths.volumes_path }}/nginx/nginx-assets-proxy.conf:/etc/nginx/includes/nginx-assets-proxy.conf:ro
+      Volume={{ remote_paths.volumes_path }}/nginx/nginx-server-content.conf:/etc/nginx/includes/nginx-server-content.conf:ro
+      Volume={{ remote_paths.volumes_path }}/letsencrypt/www:/certbot/www/:ro
+      Volume={{ remote_paths.volumes_path }}/letsencrypt/conf:/certbot/ssl/:ro
+
+      [Service]
+      TimeoutStartSec=100
+      Restart=always
+      RestartSec=8
+
+      [Install]
+      WantedBy=default.target
+
+- name: Ensure nginx service works
+  become_user: deploy
+  systemd:
+    scope: user
+    name: nginx
+    state: '{{ "restarted" if nginx_container_file.changed or nginx_root_config.changed or nginx_nested_config.changed else "started" }}'
+    enabled: true
+    daemon_reload: true
+
+- name: Trigger SSL bootstrap
+  command: /bin/true
+  notify: Bootstrap SSL
+
+- name: Add nginx logrotate script
+  blockinfile:
+    create: true
+    path: /etc/logrotate.d/nginx-log
+    block: |
+      {{ remote_paths.volumes_path }}/nginx/log/*.log {
+        su deploy deploy
+        maxsize 100M
+        rotate 7
+        copytruncate
+        notifempty
+        missingok
+        compress
+        delaycompress
+      }
+
+- name: Restart fail2ban
+  service:
+    name: fail2ban
+    state: restarted

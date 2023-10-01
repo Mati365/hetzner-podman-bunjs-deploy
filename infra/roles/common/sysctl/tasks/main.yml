@@ -1,0 +1,11 @@
+- name: vm.max_map_count = 262144
+  sysctl:
+    name: vm.max_map_count
+    value: '262144'
+    state: present
+
+- name: net.ipv4.ip_forward = 1
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present

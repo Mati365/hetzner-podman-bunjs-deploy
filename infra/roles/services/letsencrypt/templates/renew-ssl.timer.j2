@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer for renew SSL
+Requires=renew-ssl.service
+
+[Timer]
+Persistent=true
+OnUnitActiveSec=1d
+Unit=renew-ssl.service
+
+[Install]
+WantedBy=timers.target

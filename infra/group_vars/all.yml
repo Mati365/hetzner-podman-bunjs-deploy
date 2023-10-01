@@ -1,0 +1,34 @@
+node_version: 20
+
+hcloud:
+  provision: true
+  token: '{{ lookup("ansible.builtin.env", "HCLOUD_KEY") }}'
+
+all_groups:
+  - name: wheel
+
+all_users:
+  - name: deploy
+    groups:
+
+  - name: admin
+    groups: wheel
+
+local_paths:
+  keys_dir: "{{ playbook_dir }}/keys"
+  envs_dir: "{{ playbook_dir }}/envs"
+  ssh_keys:
+    authorized: "{{ playbook_dir }}/keys/authorized"
+
+remote_paths:
+  volumes_path: /containers/volumes
+
+website:
+  domain: '{{ lookup("ansible.builtin.env", "WEBSITE_DOMAIN") }}'
+  ssl: true
+
+podman:
+  registry:
+    credentials:
+      username: '{{ lookup("ansible.builtin.env", "REGISTRY_USERNAME") }}'
+      password: '{{ lookup("ansible.builtin.env", "REGISTRY_PASSWORD") }}'

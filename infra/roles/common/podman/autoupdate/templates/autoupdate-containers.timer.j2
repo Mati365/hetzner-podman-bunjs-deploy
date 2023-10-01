@@ -1,0 +1,12 @@
+[Unit]
+Description=Timer for autoupdate containers
+Requires=autoupdate-containers.service
+
+[Timer]
+Persistent=true
+OnBootSec=120
+OnCalendar=*:*:0/5
+Unit=autoupdate-containers.service
+
+[Install]
+WantedBy=timers.target

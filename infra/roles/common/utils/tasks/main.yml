@@ -1,0 +1,27 @@
+- name: Update apt-get repo and cache
+  apt:
+    update_cache: true
+    cache_valid_time: 86400
+
+- name: Install basic packages
+  package:
+    state: present
+    name:
+      - git
+      - vim
+      - jq
+      - gnupg
+      - htop
+      - curl
+      - ca-certificates
+      - lsb-release
+      - python3-pip
+      - python3-psycopg2
+      - python3-systemd
+      - rsync
+      - dnsutils
+      - slirp4netns
+      - dbus-user-session
+      - logrotate
+      - libgpgme11-dev
+      - libyajl2

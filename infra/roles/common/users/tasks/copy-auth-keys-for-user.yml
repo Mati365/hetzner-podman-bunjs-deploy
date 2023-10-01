@@ -1,0 +1,21 @@
+- name: Cleanup all user authorized keys
+  become_user: '{{ user.name }}'
+  file:
+    path: ~{{ user.name }}/.ssh/authorized_keys
+    state: absent
+
+- name: Find all auth keys in the directory for {{ user.name }}
+  become: false
+  delegate_to: localhost
+  find:
+    paths: '{{ local_paths.ssh_keys.authorized }}/{{ user.name }}/'
+    patterns: '*.pub'
+    file_type: file
+  register: user_keys_paths
+
+- name: Copy auth keys for {{ user.name }}
+  authorized_key:
+    user: '{{ user.name }}'
+    state: present
+    key: "{{ lookup('file', item.path) }}"
+  with_items: '{{ user_keys_paths.files }}'

@@ -1,0 +1,68 @@
+- name: Ensure registry volume dir is present
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: deploy
+    group: deploy
+    mode: "0774"
+  loop:
+    - "{{ remote_paths.volumes_path }}/registry"
+    - "{{ remote_paths.volumes_path }}/registry/data"
+    - "{{ remote_paths.volumes_path }}/registry/config"
+
+- name: Add a user to a password file suitable for use by registry
+  register: registry_passwd_file
+  copy:
+    content: '{{ podman.registry.credentials.username }}:{{ podman.registry.credentials.password | password_hash("bcrypt") }}'
+    dest: '{{ remote_paths.volumes_path }}/registry/config/htpasswd'
+    owner: deploy
+    group: deploy
+    mode: '0644'
+
+- name: Ensure registry.container exists
+  become_user: deploy
+  register: registry_container_file
+  blockinfile:
+    path: ~/.config/containers/systemd/registry.container
+    create: true
+    block: |
+      [Unit]
+      Description=The registry container
+      After=local-fs.target
+
+      [Container]
+      Image=registry
+      LogDriver=journald
+      PublishPort=5000:5000
+
+      Environment=REGISTRY_AUTH=htpasswd
+      Environment=REGISTRY_AUTH_HTPASSWD_REALM=realm
+      Environment=REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd
+
+      Volume={{ remote_paths.volumes_path }}/registry/data:/var/lib/registry
+      Volume={{ remote_paths.volumes_path }}/registry/config/htpasswd:/auth/htpasswd
+
+      [Service]
+      Restart=always
+
+      [Install]
+      WantedBy=default.target
+
+- name: Ensure registry service works
+  become_user: deploy
+  systemd:
+    scope: user
+    name: registry
+    state: '{{ "restarted" if registry_container_file.changed or registry_passwd_file.changed else "started" }}'
+    enabled: true
+    daemon_reload: true
+
+- name: Login deploy user to registry
+  become_user: "{{ item }}"
+  containers.podman.podman_login:
+    username: "{{ podman.registry.credentials.username }}"
+    password: "{{ podman.registry.credentials.password }}"
+  with_items:
+    - deploy
+
+- include_tasks: register-gc.yml

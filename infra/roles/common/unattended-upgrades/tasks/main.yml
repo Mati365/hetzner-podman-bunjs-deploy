@@ -1,0 +1,22 @@
+- name: unattended-upgrades packages are present
+  package:
+    state: present
+    name:
+      - unattended-upgrades
+      - apt-listchanges
+
+- name: Copy unattended-upgrades config
+  copy:
+    src: 50unattended-upgrades
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - Restart sshd
+
+- name: unattended-upgrades service is enabled
+  service:
+    name: unattended-upgrades
+    state: restarted
+    enabled: true

@@ -1,0 +1,4 @@
+- name: Restart sshd
+  systemd:
+    state: restarted
+    name: sshd

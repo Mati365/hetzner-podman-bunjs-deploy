@@ -1,0 +1,31 @@
+- name: Copy autoupdate containers service
+  template:
+    src: autoupdate-containers.service.j2
+    dest: ~deploy/.config/systemd/user/autoupdate-containers.service
+    mode: 0644
+    owner: deploy
+    group: deploy
+
+- name: Copy autoupdate containers timer
+  template:
+    src: autoupdate-containers.timer.j2
+    dest: ~deploy/.config/systemd/user/autoupdate-containers.timer
+    mode: 0644
+    owner: deploy
+    group: deploy
+
+- name: Enable autoupdate containers service
+  become_user: deploy
+  systemd:
+    name: autoupdate-containers.service
+    enabled: true
+    scope: user
+    daemon_reload: true
+
+- name: Enable autoupdate containers timer
+  become_user: deploy
+  systemd:
+    name: autoupdate-containers.timer
+    state: restarted
+    scope: user
+    enabled: true
