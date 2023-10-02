@@ -36,6 +36,12 @@ The infrastructure consists of:
 5. Run `deploy-hetzner.yml` workflow by `git push origin main:hetzner`
 6. Enter your `Hello World` site and enjoy!
 
+## Useful links
+
+https://www.redhat.com/sysadmin/quadlet-podman <br />
+https://www.redhat.com/sysadmin/podman-auto-updates-rollbacks <br />
+https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html
+
 ## License
 
 MIT License
