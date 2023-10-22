@@ -5,7 +5,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/mati365/hetzner-podman-bunjs-deploy?style=flat-square)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-Example of standalone Bun.js application deployment to Hetzner Cloud using Rootless Podman Quadlet systemd services
+Example of standalone Bun.js application deployment to Hetzner Cloud using Rootless Podman Quadlet systemd services. It can be used also as an simple alternative deployment method for Raspberry Pi. 
 
 ## Description
 
