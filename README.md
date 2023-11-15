@@ -23,7 +23,7 @@ The infrastructure consists of:
 
 1. Create empty project on hetzner.com, add primary IP named `app-primary-ip`
 2. Point your DNS to `app-primary-ip` IPv4 address
-3. Set these secrets to registry:
+3. Set these envs:
 
     ```bash
       HCLOUD_KEY: <your hcloud read & write key>
