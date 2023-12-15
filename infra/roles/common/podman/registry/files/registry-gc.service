@@ -4,7 +4,7 @@ Wants=registry-gc.timer
 
 [Service]
 Type=oneshot
-ExecStart=rm -rf /containers/volumes/registry/data/*
+ExecStart=bash -c 'rm -rf /containers/volumes/registry/data/*'
 ExecStartPost=systemctl restart --user registry
 
 [Install]
