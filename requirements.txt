@@ -1,4 +1,4 @@
-ansible==8.1.0
+ansible==8.5.0
 hcloud==1.23.1
 requests==2.31.0
 python-dateutil==2.8.2
