@@ -1,11 +1,11 @@
 - name: Add Podman GPG keys
   apt_key:
-    url: https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/Debian_Testing/Release.key
+    url: https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/Debian_12/Release.key
     state: present
 
 - name: Add Podman repo
   apt_repository:
-    repo: 'deb https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/Debian_Testing/ /'
+    repo: 'deb https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/Debian_12/ /'
     state: present
 
 - name: Update repos
