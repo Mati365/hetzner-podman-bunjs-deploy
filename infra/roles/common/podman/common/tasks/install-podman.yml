@@ -16,6 +16,7 @@
   package:
     state: present
     name:
+      - crun
       - podman
       - uidmap
       - dbus-x11
