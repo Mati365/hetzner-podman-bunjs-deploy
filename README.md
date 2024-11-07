@@ -19,6 +19,8 @@ The infrastructure consists of:
 4. Podman Quadlet containers that runs under deploy user with autoupdate containers
 5. Docker registry
 
+Take a look at container file: https://github.com/Mati365/hetzner-podman-bunjs-deploy/blob/main/infra/roles/apps/frontend/tasks/main.yml
+
 ## How to run it?
 
 1. Create empty project on hetzner.com, add primary IP named `app-primary-ip`
