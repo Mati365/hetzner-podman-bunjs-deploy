@@ -36,7 +36,7 @@
       PublishPort=3004:3000
 
       Environment=APP_ENV=production
-      Environment=SERVER_PORT=3004
+      Environment=SERVER_PORT=3000
       EnvironmentFile={{ podman.volumes_dir }}/app-frontend/frontend.env
 
       [Service]
