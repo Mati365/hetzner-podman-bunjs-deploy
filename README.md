@@ -36,7 +36,7 @@ Take a look at container file: https://github.com/Mati365/hetzner-podman-bunjs-d
     ```
 
 4. Paste your public SSH keys to all users dirs present in `infra/keys/authorized/`
-5. Run `deploy-hetzner.yml` workflow by `git push origin main:hetzner`
+5. Run `deploy-hetzner.yml` workflow by manually triggering it in GitHub Actions.
 6. Enter your `Hello World` site and enjoy!
 
 ## Useful links
