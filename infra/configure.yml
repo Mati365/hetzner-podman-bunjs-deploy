@@ -1,4 +1,5 @@
 - hosts: localhost
+  tags: provision
   roles:
     - role: provision
       when: hcloud.provision is defined and hcloud.provision|bool == True
