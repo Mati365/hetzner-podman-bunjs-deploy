@@ -30,7 +30,6 @@ env:
   REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
   REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
   WEBSITE_DOMAIN: ${{ secrets.WEBSITE_DOMAIN }}
-  WEBSITE_SSL_ENABLED: ${{ secrets.WEBSITE_SSL_ENABLED }}
 
 jobs:
   changes:
@@ -91,7 +90,7 @@ jobs:
 
       - name: Run configure playbook
         working-directory: ./infra
-        run: ansible-playbook ./configure.yml
+        run: ansible-playbook -v ./configure.yml
 
   deploy-docker-images:
     runs-on: ubuntu-latest

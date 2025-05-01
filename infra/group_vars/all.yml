@@ -30,7 +30,7 @@ local_paths:
 
 website:
   domain: '{{ lookup("ansible.builtin.env", "WEBSITE_DOMAIN") }}'
-  ssl: '{{ lookup("ansible.builtin.env", "WEBSITE_SSL_ENABLED") | bool }}'
+  ssl: true
 
 podman:
   containers_dir: /containers

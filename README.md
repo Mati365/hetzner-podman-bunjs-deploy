@@ -37,7 +37,6 @@ Take a look at container file: https://github.com/Mati365/hetzner-podman-bunjs-d
 3. Set these envs:
 
     ```bash
-      WEBSITE_SSL_ENABLED=true
       HCLOUD_KEY: <your hcloud read & write key>
       REGISTRY_USERNAME: <specify username for podman registry>
       REGISTRY_PASSWORD: <specify password for podman registry>
