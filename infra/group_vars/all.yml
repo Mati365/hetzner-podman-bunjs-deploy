@@ -43,4 +43,4 @@ podman:
 
 certbot:
   domains:
-    - ${{ website.domain }}
+    - '{{ website.domain }}'
