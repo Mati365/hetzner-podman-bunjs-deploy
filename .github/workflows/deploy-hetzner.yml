@@ -18,6 +18,12 @@ on:
         required: false
         default: false
 
+      ansible_tags:
+        description: Ansible tags to run (comma-separated)
+        type: string
+        required: false
+        default: ''
+
 concurrency:
   group: deploy-hetzner-${{ github.ref }}
   cancel-in-progress: false
@@ -90,7 +96,7 @@ jobs:
 
       - name: Run configure playbook
         working-directory: ./infra
-        run: ansible-playbook -v ./configure.yml
+        run: ansible-playbook -v ./configure.yml ${{ github.event.inputs.ansible_tags != '' && format('--tags {0}', github.event.inputs.ansible_tags) || '' }}
 
   deploy-docker-images:
     runs-on: ubuntu-latest
