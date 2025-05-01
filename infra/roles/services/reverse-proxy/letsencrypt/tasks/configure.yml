@@ -26,13 +26,6 @@
     - key: '{{ podman.volumes_dir }}/letsencrypt/conf/live/{{ website.domain }}/privkey.pem'
       cert: '{{ podman.volumes_dir }}/letsencrypt/conf/live/{{ website.domain }}/fullchain.pem'
 
-- name: Create temp config indicator
-  when: not cert_key_file.stat.exists
-  become_user: nginx
-  file:
-    path: '{{ podman.volumes_dir }}/letsencrypt/temp-conf'
-    state: touch
-
 - name: Add letsencrypt logrotate script
   blockinfile:
     create: true
