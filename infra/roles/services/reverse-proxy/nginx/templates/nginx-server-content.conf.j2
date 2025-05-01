@@ -27,6 +27,17 @@ gzip_types
   text/plain
   text/xml;
 
+location /v2 {
+  proxy_pass http://0.0.0.0:5000;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header Host      $http_host;
+
+  proxy_set_header X-Forwarded-Proto https;
+  proxy_set_header X-Forwarded-Ssl off;
+
+  client_max_body_size 200M;
+}
+
 location /assets/ {
   include includes/nginx-assets-proxy.conf;
   proxy_pass http://0.0.0.0:3004;
