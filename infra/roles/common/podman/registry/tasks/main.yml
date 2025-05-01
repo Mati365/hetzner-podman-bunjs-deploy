@@ -31,7 +31,7 @@
       After=local-fs.target
 
       [Container]
-      Image=registry
+      Image=registry:2.8
       LogDriver=journald
       PublishPort=5000:5000
 
