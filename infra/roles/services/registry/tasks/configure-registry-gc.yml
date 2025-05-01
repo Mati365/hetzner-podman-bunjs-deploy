@@ -1,0 +1,56 @@
+- name: Copy registry gc service
+  copy:
+    content: |
+      [Unit]
+      Description=GC registry
+      Wants=registry-gc.timer
+
+      [Service]
+      Type=oneshot
+      ExecStart=bash -c 'rm -rf {{ podman.volumes_dir }}/registry/data/*'
+      ExecStartPost=systemctl restart --user registry
+
+      [Install]
+      WantedBy=multi-user.target
+
+    dest: ~registry/.config/systemd/user/registry-gc.service
+    owner: registry
+    group: registry
+    mode: 0644
+
+- name: Copy registry gc timer
+  copy:
+    content: |
+      [Unit]
+      Description=Timer for gc registry
+      Requires=registry-gc.service
+
+      [Timer]
+      Persistent=true
+      OnCalendar=*-*-* 02:00:00
+      Unit=registry-gc.service
+
+      [Install]
+      WantedBy=timers.target
+
+    dest: ~registry/.config/systemd/user/registry-gc.timer
+    owner: registry
+    group: registry
+    mode: 0644
+
+- name: Enable registry gc service
+  become_user: registry
+  systemd:
+    name: registry-gc.service
+    enabled: true
+    scope: user
+    daemon_reload: true
+
+- name: Enable registry gc timer
+  become_user: registry
+  systemd:
+    name: registry-gc.timer
+    state: restarted
+    scope: user
+    enabled: true
+    daemon_reload: true

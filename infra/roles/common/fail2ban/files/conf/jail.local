@@ -194,7 +194,7 @@ port = 0:65535
 # Format of user-agent https://tools.ietf.org/html/rfc7231#section-5.5.3
 fail2ban_agent = Fail2Ban/%(fail2ban_version)s
 
-nginx_ports = http,https,8080,8081
+nginx_ports = http,https
 
 #
 # Action shortcuts. To be used to define action parameter
@@ -359,8 +359,8 @@ port     = %(nginx_ports)s
 enabled  = true
 filter   = nginx-dos
 logpath  = /var/log/nginx/*access*.log
-findtime = 120
-maxretry = 200
+findtime = 40
+maxretry = 500
 port     = %(nginx_ports)s
 
 # To use 'nginx-limit-req' jail you should have `ngx_http_limit_req_module`

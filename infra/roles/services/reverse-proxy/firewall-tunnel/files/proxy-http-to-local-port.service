@@ -1,0 +1,11 @@
+[Unit]
+Wants=sockets.target
+Requires=proxy-http-to-local-port.socket
+After=proxy-http-to-local-port.socket
+DefaultDependencies=no
+
+[Service]
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd 0.0.0.0:8080
+
+[Install]
+WantedBy=sockets.target

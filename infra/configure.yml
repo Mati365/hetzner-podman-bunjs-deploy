@@ -11,35 +11,56 @@
         delay: 2
         timeout: 10000
 
-# Utils
+# Basic linux configuration
 - hosts: web
   gather_facts: true
   become: true
+  tags: commons
   roles:
-    - role: common/sysctl
-    - role: common/utils
-    - role: common/unattended-upgrades
+    - role: common/time
+    - role: common/journald
+    - role: common/basic-pkgs
     - role: common/firewall
-    - role: common/sshd
+    - role: common/selinux
+    - role: common/automatic-upgrades
     - role: common/users
-    - role: common/fish
     - role: common/fail2ban
-    - role: common/podman/common
-    - role: common/podman/registry
-    - role: common/podman/remove-dangling-images
-    - role: common/podman/autoupdate
+    - role: common/sysctl
+    - role: common/sshd
+    - role: common/fish
 
-# Services
+# Podman container runtime
 - hosts: web
   gather_facts: true
   become: true
+  tags: podman
   roles:
-    - role: services/letsencrypt
-    - role: services/nginx
+    - role: podman/install
+    - role: podman/autoupdater
 
-# Apps
+# Containerized services
 - hosts: web
   gather_facts: true
   become: true
+  tags: services
+  roles:
+    - role: services/registry
+      tags: registry
+
+    - role: services/reverse-proxy/firewall-tunnel
+      tags: reverse-proxy,firewall-tunnel
+
+    - role: services/reverse-proxy/letsencrypt
+      tags: reverse-proxy,letsencrypt
+
+    - role: services/reverse-proxy/nginx
+      tags: reverse-proxy,nginx
+
+# Applications and websites
+- hosts: web
+  gather_facts: true
+  become: true
+  tags: apps
   roles:
     - role: apps/frontend
+      tags: frontend

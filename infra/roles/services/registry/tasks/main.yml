@@ -1,0 +1,74 @@
+- name: Ensure registry volume dir is present
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: registry
+    group: registry
+    mode: '0750'
+  loop:
+    - '{{ podman.volumes_dir }}/registry'
+    - '{{ podman.volumes_dir }}/registry/data'
+    - '{{ podman.volumes_dir }}/registry/config'
+
+- name: Add a user to a password file suitable for use by registry
+  register: registry_passwd_file
+  copy:
+    content: '{{ podman.registry.credentials.username }}:{{ podman.registry.credentials.password | password_hash("bcrypt") }}'
+    dest: '{{ podman.volumes_dir }}/registry/config/htpasswd'
+    owner: registry
+    group: registry
+    mode: '0644'
+
+- name: Ensure registry.container exists
+  become_user: registry
+  register: registry_container_file
+  blockinfile:
+    path: ~/.config/containers/systemd/registry.container
+    create: true
+    owner: registry
+    group: registry
+    mode: '0640'
+    block: |
+      [Unit]
+      Description=The registry container
+      After=local-fs.target
+
+      [Container]
+      Image=registry:2.8
+      LogDriver=journald
+      PublishPort=5000:5000
+
+      Environment=REGISTRY_AUTH=htpasswd
+      Environment=REGISTRY_AUTH_HTPASSWD_REALM=realm
+      Environment=REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd
+      NoNewPrivileges=true
+      ReadOnlyTmpfs=true
+
+      Volume={{ podman.volumes_dir }}/registry/data:/var/lib/registry:Z
+      Volume={{ podman.volumes_dir }}/registry/config/htpasswd:/auth/htpasswd:Z,ro
+
+      [Service]
+      Restart=always
+
+      [Install]
+      WantedBy=default.target
+
+- name: Ensure registry service works
+  become_user: registry
+  systemd:
+    scope: user
+    name: registry
+    state: '{{ "restarted" if registry_container_file.changed or registry_passwd_file.changed else "started" }}'
+    enabled: true
+    daemon_reload: true
+
+- name: Login local users to registry
+  become_user: '{{ user.name }}'
+  containers.podman.podman_login:
+    username: '{{ podman.registry.credentials.username }}'
+    password: '{{ podman.registry.credentials.password }}'
+  loop: '{{ all_users | selectattr("groups", "contains", "containers") | list }}'
+  loop_control:
+    loop_var: user
+
+- include_tasks: configure-registry-gc.yml

@@ -1,0 +1,33 @@
+- name: Update package manager cache
+  package:
+    update_cache: true
+
+- name: Add epel repository
+  package:
+    name: epel-release
+    state: present
+
+- name: Install basic packages
+  package:
+    state: present
+    name:
+      - git
+      - vim
+      - jq
+      - gnupg2
+      - htop
+      - curl
+      - ca-certificates
+      - python3-pip
+      - python3-systemd
+      - rsync
+      - bind-utils
+      - slirp4netns
+      - dbus-daemon
+      - python3-psycopg2
+      - logrotate
+      - yajl
+      - acl
+      - ncdu
+      - openssl
+      - telnet

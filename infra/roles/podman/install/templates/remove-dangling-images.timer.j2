@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer for removing dangling images
+Requires=remove-dangling-images.service
+
+[Timer]
+Persistent=true
+OnCalendar=*-*-* 0:10:00
+Unit=remove-dangling-images.service
+
+[Install]
+WantedBy=timers.target

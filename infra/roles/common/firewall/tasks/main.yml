@@ -6,7 +6,15 @@
 - name: nftables config is synced
   template:
     src: nftables.conf.j2
-    dest: /etc/nftables.conf
+    dest: /etc/sysconfig/nftables.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Check if nftables.d directory is present
+  file:
+    path: /etc/nftables.d
+    state: directory
     owner: root
     group: root
     mode: 0644

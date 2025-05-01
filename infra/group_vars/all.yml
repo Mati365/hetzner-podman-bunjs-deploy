@@ -7,9 +7,17 @@ hcloud:
 all_groups:
   - name: wheel
 
+  - name: containers
+
 all_users:
-  - name: deploy
-    groups:
+  - name: app_front
+    groups: containers,systemd-journal
+
+  - name: nginx
+    groups: containers,systemd-journal
+
+  - name: registry
+    groups: containers,systemd-journal
 
   - name: admin
     groups: wheel
@@ -20,15 +28,19 @@ local_paths:
   ssh_keys:
     authorized: "{{ playbook_dir }}/keys/authorized"
 
-remote_paths:
-  volumes_path: /containers/volumes
-
 website:
   domain: '{{ lookup("ansible.builtin.env", "WEBSITE_DOMAIN") }}'
-  ssl: true
+  ssl: '{{ lookup("ansible.builtin.env", "WEBSITE_SSL_ENABLED") | bool }}'
 
 podman:
+  containers_dir: /containers
+  volumes_dir: /containers/volumes
+
   registry:
     credentials:
       username: '{{ lookup("ansible.builtin.env", "REGISTRY_USERNAME") }}'
       password: '{{ lookup("ansible.builtin.env", "REGISTRY_PASSWORD") }}'
+
+certbot:
+  domains:
+    - ${{ website.domain }}

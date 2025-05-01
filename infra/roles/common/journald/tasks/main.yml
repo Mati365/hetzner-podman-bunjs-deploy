@@ -1,0 +1,50 @@
+- name: Ensure journald directory exists
+  register: journald_dir_file
+  file:
+    state: directory
+    path: /var/log/journal
+    owner: root
+    group: systemd-journal
+    mode: '2755'
+
+- name: Ensure storage is persistent
+  lineinfile:
+    dest: /etc/systemd/journald.conf
+    regexp: ^Storage=
+    line: Storage=persistent
+
+- name: Limit the total size of journald logs
+  lineinfile:
+    dest: /etc/systemd/journald.conf
+    regexp: ^SystemMaxUse=
+    line: SystemMaxUse=500M
+
+- name: Limit the size of each journald log file
+  lineinfile:
+    dest: /etc/systemd/journald.conf
+    regexp: ^SystemMaxFileSize=
+    line: SystemMaxFileSize=50M
+
+- name: Restrict access to journal logs by user
+  lineinfile:
+    dest: /etc/systemd/journald.conf
+    regexp: ^SplitMode=
+    line: SplitMode=uid
+
+- name: Enable compression of journald logs
+  lineinfile:
+    dest: /etc/systemd/journald.conf
+    regexp: ^Compress=
+    line: Compress=yes
+
+- name: Reload systemd-journald
+  systemd:
+    name: systemd-journald
+    state: restarted
+
+# Reboot machine as journald does not support reloading super well when the directory was not present
+- name: Reboot machine
+  when: journald_dir_file.changed
+  reboot:
+    reboot_timeout: 300
+    msg: "Rebooting to apply journald changes"

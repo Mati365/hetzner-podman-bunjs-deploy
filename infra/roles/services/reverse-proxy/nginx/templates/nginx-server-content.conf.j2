@@ -1,0 +1,99 @@
+keepalive_timeout 65;
+gzip on;
+gzip_vary on;
+gzip_proxied any;
+gzip_comp_level 6;
+gzip_buffers 16 8k;
+gzip_http_version 1.1;
+gzip_min_length 256;
+gzip_types
+  application/atom+xml
+  application/geo+json
+  application/javascript
+  application/x-javascript
+  application/json
+  application/ld+json
+  application/manifest+json
+  application/rdf+xml
+  application/rss+xml
+  application/xhtml+xml
+  application/xml
+  font/eot
+  font/otf
+  font/ttf
+  image/svg+xml
+  text/css
+  text/javascript
+  text/plain
+  text/xml;
+
+location = /minio {
+  return 301 /minio/login;
+}
+
+location /minio/ws {
+  rewrite "^/minio/(.*)$" /$1 break;
+  proxy_pass http://0.0.0.0:9001;
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+}
+
+location /minio {
+  rewrite "^/minio/(.*)$" /$1 break;
+  proxy_pass http://0.0.0.0:9001;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header Host      $http_host;
+}
+
+location /s3 {
+  rewrite ^/s3(/.*) /assets/$1 break;
+
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header Host $http_host;
+  proxy_set_header Authorization "";
+
+  proxy_pass http://0.0.0.0:9000;
+  access_log off;
+
+  limit_except GET {
+    deny all;
+  }
+}
+
+location /v2 {
+  proxy_pass http://0.0.0.0:5000;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header Host      $http_host;
+
+  proxy_set_header X-Forwarded-Proto https;
+  proxy_set_header X-Forwarded-Ssl off;
+
+  client_max_body_size 200M;
+}
+
+location /api {
+  rewrite ^/api(/.*) $1 break;
+  proxy_pass http://0.0.0.0:3003;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header Host      $http_host;
+  proxy_set_header X-Accel-Buffering "no";
+  proxy_request_buffering off;
+  proxy_redirect off;
+  proxy_buffering off;
+  proxy_cache off;
+}
+
+location /assets/ {
+  include includes/nginx-assets-proxy.conf;
+  proxy_pass http://0.0.0.0:3004;
+  proxy_redirect off;
+}
+
+location / {
+  proxy_pass http://0.0.0.0:3004;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header Host      $http_host;
+  proxy_redirect off;
+}

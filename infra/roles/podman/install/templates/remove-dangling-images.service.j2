@@ -1,0 +1,10 @@
+[Unit]
+Description=GC registry
+Wants=remove-dangling-images.timer
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'podman container prune -f 2>/dev/null && podman image prune -a -f 2>/dev/null && podman volume prune -f 2>/dev/null && podman network prune -f 2>/dev/null'
+
+[Install]
+WantedBy=multi-user.target

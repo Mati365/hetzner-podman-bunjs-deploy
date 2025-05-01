@@ -1,0 +1,48 @@
+- name: Ensure proper ports are present in http_port_t
+  seport:
+    ports:
+      - 80
+      - 443
+      - 8080
+      - 8081
+    proto: tcp
+    setype: http_port_t
+    state: present
+
+- name: Create SELinux policy file for systemd_socket_proxyd
+  register: systemd_socket_proxyd_reverse_proxy
+  copy:
+    dest: /tmp/systemd_socket_proxyd_reverse_proxy.te
+    content: |
+      module systemd_socket_proxyd_reverse_proxy 1.0;
+
+      require {
+          type systemd_socket_proxyd_t;
+          type http_port_t;
+          class tcp_socket name_bind;
+          class tcp_socket name_connect;
+      }
+
+      # Allow systemd_socket_proxyd_t to bind to http_port_t
+      allow systemd_socket_proxyd_t http_port_t:tcp_socket name_bind;
+
+      # Allow systemd_socket_proxyd_t to connect to http_port_t
+      allow systemd_socket_proxyd_t http_port_t:tcp_socket name_connect;
+    owner: root
+    group: root
+    mode: 0640
+
+- name: Remove SELinux policy module if it exists
+  shell: |
+    if semodule -l | grep -q systemd_socket_proxyd_reverse_proxy; then
+      semodule -r systemd_socket_proxyd_reverse_proxy
+    fi
+  when: systemd_socket_proxyd_reverse_proxy.changed
+
+- name: Compile SELinux and apply policy module
+  when: systemd_socket_proxyd_reverse_proxy.changed
+  shell: |
+    checkmodule -M -m -o /tmp/systemd_socket_proxyd_reverse_proxy.mod /tmp/systemd_socket_proxyd_reverse_proxy.te
+    semodule_package -o /tmp/systemd_socket_proxyd_reverse_proxy.pp -m /tmp/systemd_socket_proxyd_reverse_proxy.mod
+    semodule -i /tmp/systemd_socket_proxyd_reverse_proxy.pp
+    rm -f /tmp/systemd_socket_proxyd_reverse_proxy.{mod,pp}

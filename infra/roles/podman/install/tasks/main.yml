@@ -1,0 +1,34 @@
+- name: Podman is installed
+  package:
+    state: present
+    name:
+      - crun
+      - podman
+      - netavark
+      - passt
+      - dbus-x11
+
+- name: Ensure podman directories are accessible by containers users
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: ansible
+    group: containers
+    mode: '0750'
+  with_items:
+    - '{{ podman.containers_dir }}'
+    - '{{ podman.volumes_dir }}'
+
+- name: Copy registries config
+  template:
+    src: registries.conf.j2
+    dest: /etc/containers/registries.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Configure podman for all users in containers group
+  include_tasks: configure-for-user.yml
+  loop: '{{ all_users | selectattr("groups", "contains", "containers") | list }}'
+  loop_control:
+    loop_var: user

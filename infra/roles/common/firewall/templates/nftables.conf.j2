@@ -11,6 +11,7 @@ table inet filter {
 
   chain inbound {
     type filter hook input priority 0; policy drop;
+    ether type arp accept;
 
     # Allow traffic from established and related packets, drop invalid
     ct state vmap { established : accept, related : accept, invalid : drop }
@@ -21,25 +22,14 @@ table inet filter {
     # Jump to chain according to layer 3 protocol using a verdict map
     meta protocol vmap { ip : jump inbound_ipv4, ip6 : jump inbound_ipv6 }
 
-    # Allow some ports
-    tcp dport { 22, 80, 443, 8080, 8081, 5000 } accept
+    # Allow port 22
+    tcp dport { 22 } accept
+
+    # Other ports
+    include "/etc/nftables.d/*-inbound.conf"
   }
 
   chain forward {
     type filter hook forward priority 0; policy drop;
-  }
-}
-
-table ip nat {
-  chain postrouting {
-    type nat hook postrouting priority 100; policy accept;
-    masquerade
-  }
-
-  chain prerouting {
-    type nat hook prerouting priority -100; policy accept;
-
-    tcp dport 80 redirect to 8080
-    tcp dport 443 redirect to 8081
   }
 }

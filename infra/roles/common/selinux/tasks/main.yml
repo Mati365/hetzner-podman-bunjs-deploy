@@ -1,0 +1,16 @@
+- name: Ensure SELinux is installed
+  package:
+    state: present
+    name:
+      - audit
+      - policycoreutils
+      - policycoreutils-python-utils
+      - libselinux-utils
+      - selinux-policy-targeted
+  register: selinux_packages
+
+- name: Ensure SELinux is enabled
+  register: selinux_enforcing
+  selinux:
+    policy: targeted
+    state: enforcing

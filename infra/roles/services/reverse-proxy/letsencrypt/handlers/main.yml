@@ -1,0 +1,17 @@
+- name: Bootstrap SSL
+  become_user: nginx
+  when: website.ssl and website.domain
+  shell: |
+    if test -f "{{ podman.volumes_dir }}/letsencrypt/temp-conf"; then
+      rm {{ podman.volumes_dir }}/letsencrypt/temp-conf
+      rm -rf {{ podman.volumes_dir }}/letsencrypt/conf/*
+
+      podman run \
+        --rm \
+        -v {{ podman.volumes_dir }}/letsencrypt/www:/var/www/certbot/:z,rw \
+        -v {{ podman.volumes_dir }}/letsencrypt/conf:/etc/letsencrypt/:z,rw \
+        -v {{ podman.volumes_dir }}/letsencrypt/log:/var/log/letsencrypt/:z,rw \
+        certbot/certbot:latest certonly --register-unsafely-without-email --agree-tos --webroot --webroot-path /var/www/certbot/ -d {{ certbot.domains | join('-d') }}
+
+      podman kill -s SIGHUP systemd-nginx
+    fi

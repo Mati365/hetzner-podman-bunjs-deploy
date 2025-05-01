@@ -1,0 +1,81 @@
+- name: Ensure letsencrypt volume dir is present
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: '0750'
+  loop:
+    - '{{ podman.volumes_dir }}/letsencrypt'
+    - '{{ podman.volumes_dir }}/letsencrypt/www'
+    - '{{ podman.volumes_dir }}/letsencrypt/conf'
+    - '{{ podman.volumes_dir }}/letsencrypt/conf/live/{{ website.domain }}'
+    - '{{ podman.volumes_dir }}/letsencrypt/log'
+
+- name: Check if there is already cert file
+  stat:
+    path: '{{ podman.volumes_dir }}/letsencrypt/conf/live/{{ website.domain }}/privkey.pem'
+  register: cert_key_file
+
+- name: Create temp self-signed certificate
+  when: not cert_key_file.stat.exists
+  become_user: nginx
+  shell: |
+    openssl req -x509 -nodes -subj '/CN={{ website.domain }}' -days 365 -newkey rsa:4096 -sha256 -keyout {{ item.key }} -out {{ item.cert }} creates={{ item.cert }}
+  with_items:
+    - key: '{{ podman.volumes_dir }}/letsencrypt/conf/live/{{ website.domain }}/privkey.pem'
+      cert: '{{ podman.volumes_dir }}/letsencrypt/conf/live/{{ website.domain }}/fullchain.pem'
+
+- name: Create temp config indicator
+  when: not cert_key_file.stat.exists
+  become_user: nginx
+  file:
+    path: '{{ podman.volumes_dir }}/letsencrypt/temp-conf'
+    state: touch
+
+- name: Add letsencrypt logrotate script
+  blockinfile:
+    create: true
+    path: /etc/logrotate.d/letsencrypt-log
+    block: |
+      {{ podman.volumes_dir }}/letsencrypt/log/*.log {
+        su nginx nginx
+        maxsize 100M
+        rotate 7
+        copytruncate
+        notifempty
+        missingok
+        compress
+        delaycompress
+      }
+
+- name: Renew SSL service is present in systemd
+  template:
+    src: renew-ssl.service.j2
+    dest: ~nginx/.config/systemd/user/renew-ssl.service
+    mode: 0644
+
+- name: Renew SSL timer is present in systemd
+  template:
+    src: renew-ssl.timer.j2
+    dest: ~nginx/.config/systemd/user/renew-ssl.timer
+    mode: 0644
+
+- name: Enable renew ssl service
+  become_user: nginx
+  when: website.ssl
+  systemd:
+    name: renew-ssl.service
+    scope: user
+    enabled: true
+    daemon_reload: true
+
+- name: Enable renew ssl timer
+  become_user: nginx
+  when: website.ssl
+  systemd:
+    name: renew-ssl.timer
+    state: started
+    scope: user
+    enabled: true
+    daemon_reload: true

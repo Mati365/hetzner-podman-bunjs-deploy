@@ -1,0 +1,91 @@
+- name: Ensure nginx volume dir is present
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: '0750'
+  loop:
+    - '{{ podman.volumes_dir }}/nginx'
+    - '{{ podman.volumes_dir }}/nginx/log'
+    - '{{ podman.volumes_dir }}/nginx/scripts'
+
+- name: Symlink whole directory
+  ansible.builtin.file:
+    src: '{{ podman.volumes_dir }}/nginx/log'
+    dest: /var/log/nginx
+    owner: nginx
+    group: nginx
+    mode: '0750'
+    state: link
+    force: true
+
+- name: Nginx config is synced
+  register: nginx_root_config
+  vars:
+    ssl_enabled: '{{ website.ssl }}'
+  template:
+    src: nginx.conf.j2
+    dest: '{{ podman.volumes_dir }}/nginx/nginx.conf'
+    owner: nginx
+    group: nginx
+    mode: '0644'
+
+- name: Nginx includes config is synced
+  register: nginx_nested_config
+  vars:
+    ssl_enabled: '{{ website.ssl }}'
+  template:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    owner: nginx
+    group: nginx
+    mode: '0644'
+  loop:
+    - {
+        src: 'nginx-assets-proxy.conf.j2',
+        dest: '{{ podman.volumes_dir }}/nginx/nginx-assets-proxy.conf',
+      }
+    - {
+        src: 'nginx-server-content.conf.j2',
+        dest: '{{ podman.volumes_dir }}/nginx/nginx-server-content.conf',
+      }
+
+- name: Ensure nginx.container exists
+  become_user: nginx
+  register: nginx_container_file
+  template:
+    src: nginx.container.j2
+    dest: ~/.config/containers/systemd/nginx.container
+    owner: nginx
+    group: nginx
+    mode: '0640'
+
+- name: Ensure nginx service works
+  become_user: nginx
+  systemd:
+    scope: user
+    name: nginx
+    state: '{{ "restarted" if nginx_container_file.changed or nginx_root_config.changed or nginx_nested_config.changed else "started" }}'
+    enabled: true
+    daemon_reload: true
+
+- name: Trigger SSL bootstrap
+  command: /bin/true
+  notify: Bootstrap SSL
+
+- name: Add nginx logrotate script
+  blockinfile:
+    create: true
+    path: /etc/logrotate.d/nginx-log
+    block: |
+      {{ podman.volumes_dir }}/nginx/log/*.log {
+        su nginx nginx
+        maxsize 100M
+        rotate 7
+        copytruncate
+        notifempty
+        missingok
+        compress
+        delaycompress
+      }

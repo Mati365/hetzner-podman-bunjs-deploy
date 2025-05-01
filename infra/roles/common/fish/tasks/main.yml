@@ -9,7 +9,7 @@
   loop_control:
     loop_var: user
 
-- name: Ensure CI user is not using fish shell
+- name: Ensure ansible user is not using fish shell
   user:
-    name: ci
+    name: ansible
     shell: /bin/bash

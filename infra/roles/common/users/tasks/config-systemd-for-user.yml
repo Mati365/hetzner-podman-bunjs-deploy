@@ -1,0 +1,42 @@
+- name: Ensure that the user has a systemd user directory
+  file:
+    path: '~{{ user.name }}/.config/systemd/user/'
+    state: directory
+    owner: '{{ user.name }}'
+    group: '{{ user.name }}'
+    mode: 0750
+
+- name: Check if user is lingering
+  stat:
+    path: '/var/lib/systemd/linger/{{ user.name }}'
+  register: user_lingering
+
+- name: Enable lingering is needed
+  command: 'loginctl enable-linger {{ user.name }}'
+  when: not user_lingering.stat.exists
+
+- name: Get current user's UID
+  command: 'id -u {{ user.name }}'
+  register: user_id
+
+# Prevent "Failed to connect to bus: No medium found" error after sudo
+- name: Ensure .config/fish directory exists
+  file:
+    state: directory
+    path: '~{{ user.name }}/.config/fish/'
+    owner: '{{ user.name }}'
+    group: '{{ user.name }}'
+    mode: 0750
+
+- name: Ensure proper XDG universal variables are set
+  lineinfile:
+    path: '~{{ user.name }}/.config/fish/config.fish'
+    line: '{{ item }}'
+    create: true
+    owner: '{{ user.name }}'
+    group: '{{ user.name }}'
+    mode: 0664
+  loop:
+    - 'set -Ux XDG_RUNTIME_DIR "/run/user/{{ user_id.stdout }}"'
+    - 'set -Ux DBUS_SESSION_BUS_ADDRESS "unix:path=$XDG_RUNTIME_DIR/bus"'
+    - 'systemctl restart --user dbus 2>/dev/null' # Restart dbus to pick up the new XDG_RUNTIME_DIR

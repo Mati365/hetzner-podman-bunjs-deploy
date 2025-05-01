@@ -9,6 +9,7 @@
   get_url:
     url: https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install
     dest: ~{{ user.name }}/installers/omf.sh
+    force: no
 
 - name: Adding +x to omf installer
   file: dest=~{{ user.name }}/installers/omf.sh mode=a+x
@@ -18,3 +19,8 @@
   shell:
     executable: /bin/fish
     cmd: ~{{ user.name }}/installers/omf.sh --noninteractive --yes --path=~/.local/share/omf --config=~/.config/omf
+    chdir: "~{{ user.name }}"
+  retries: 3
+  delay: 3
+  register: execute_result
+  until: execute_result.rc == 0

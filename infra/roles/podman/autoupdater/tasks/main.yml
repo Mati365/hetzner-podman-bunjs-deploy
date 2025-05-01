@@ -1,0 +1,5 @@
+- name: Install autoupdater for users in containers group
+  include_tasks: install-for-user.yml
+  loop: '{{ all_users | selectattr("groups", "contains", "containers") | list }}'
+  loop_control:
+    loop_var: user

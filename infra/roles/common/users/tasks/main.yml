@@ -24,6 +24,16 @@
   loop_control:
     loop_var: user
 
+- name: Generate private SSH keys for users
+  ansible.builtin.user:
+    name: '{{ user.name }}'
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_file: .ssh/id_rsa
+  loop: '{{ all_users }}'
+  loop_control:
+    loop_var: user
+
 - name: Disable login messages
   become_user: '{{ user.name }}'
   file:
@@ -33,8 +43,8 @@
   loop_control:
     loop_var: user
 
-- name: DBUS is persistent for user
-  include_tasks: persistent-dbus-for-user.yml
+- name: Config systemd for users
+  include_tasks: config-systemd-for-user.yml
   loop: '{{ all_users }}'
   loop_control:
     loop_var: user

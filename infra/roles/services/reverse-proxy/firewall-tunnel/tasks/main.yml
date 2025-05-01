@@ -1,0 +1,56 @@
+- name: Copy firewall files
+  copy:
+    src: nftables-reverse-proxy-inbound.conf
+    dest: /etc/nftables.d/
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Restart nftables
+  systemd:
+    name: nftables
+    state: restarted
+    enabled: true
+    daemon_reload: true
+
+- name: Enable systemd proxy in selinux
+  include_tasks: selinux-proxy.yml
+
+- name: Copy proxy systemd service files
+  copy:
+    src: '{{ item }}'
+    dest: /lib/systemd/system/
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - proxy-http-to-local-port.socket
+    - proxy-http-to-local-port.service
+    - proxy-https-to-local-port.socket
+    - proxy-https-to-local-port.service
+
+# Enable http proxy
+- name: Enable proxy http to local port socket
+  systemd:
+    name:  proxy-http-to-local-port.socket
+    enabled: true
+    daemon_reload: true
+
+- name: Enable proxy http to local port service
+  systemd:
+    name: proxy-http-to-local-port.service
+    state: restarted
+    enabled: true
+
+# Enable https proxy
+- name: Enable proxy https to local port socket
+  systemd:
+    name:  proxy-https-to-local-port.socket
+    enabled: true
+    daemon_reload: true
+
+- name: Enable proxy https to local port service
+  systemd:
+    name: proxy-https-to-local-port.service
+    state: restarted
+    enabled: true

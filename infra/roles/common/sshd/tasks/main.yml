@@ -5,5 +5,8 @@
     owner: root
     group: root
     mode: 0644
-  notify:
-    - Restart sshd
+
+- name: Restart sshd
+  systemd:
+    state: restarted
+    name: sshd

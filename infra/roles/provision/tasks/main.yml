@@ -47,7 +47,7 @@
     state: present
     name: app-server
     server_type: cax11
-    image: debian-12
+    image: alma-9
     location: hel1
     delete_protection: true
     rebuild_protection: true

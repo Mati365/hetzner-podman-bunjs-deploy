@@ -1,0 +1,31 @@
+[Unit]
+Description=The nginx container
+After=local-fs.target
+StartLimitIntervalSec=5
+
+[Container]
+Image=nginxinc/nginx-unprivileged:latest
+LogDriver=journald
+
+Network=host
+UserNS=keep-id:uid=101,gid=101
+NoNewPrivileges=true
+ReadOnlyTmpfs=true
+
+Volume={{ podman.volumes_dir }}/nginx/log:/var/log/nginx:z,rw
+Volume={{ podman.volumes_dir }}/nginx/nginx.conf:/etc/nginx/nginx.conf:Z,ro
+Volume={{ podman.volumes_dir }}/nginx/nginx-assets-proxy.conf:/etc/nginx/includes/nginx-assets-proxy.conf:Z,ro
+Volume={{ podman.volumes_dir }}/nginx/nginx-server-content.conf:/etc/nginx/includes/nginx-server-content.conf:Z,ro
+
+{% if website.ssl %}
+  Volume={{ podman.volumes_dir }}/letsencrypt/www:/certbot/www/:z,rw
+  Volume={{ podman.volumes_dir }}/letsencrypt/conf:/certbot/ssl/:z,rw
+{% endif %}
+
+[Service]
+TimeoutStartSec=100
+Restart=always
+RestartSec=8
+
+[Install]
+WantedBy=default.target

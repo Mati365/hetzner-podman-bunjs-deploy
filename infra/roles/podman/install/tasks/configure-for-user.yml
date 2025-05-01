@@ -1,0 +1,57 @@
+- name: Ensure volumes dir is present
+  file:
+    path: '~{{ user.name }}/volumes'
+    state: directory
+    owner: '{{ user.name }}'
+    group: '{{ user.name }}'
+    mode: '0700'
+
+- name: Copy remove dangling images service
+  template:
+    src: remove-dangling-images.service.j2
+    dest: ~{{ user.name }}/.config/systemd/user/remove-dangling-images.service
+    owner: '{{ user.name }}'
+    group: '{{ user.name }}'
+    mode: 0644
+
+- name: Copy remove dangling images timer
+  template:
+    src: remove-dangling-images.timer.j2
+    dest: ~{{ user.name }}/.config/systemd/user/remove-dangling-images.timer
+    owner: '{{ user.name }}'
+    group: '{{ user.name }}'
+    mode: 0644
+
+- name: Enable remove dangling images service
+  become_user: '{{ user.name }}'
+  systemd:
+    name: remove-dangling-images.service
+    enabled: true
+    scope: user
+    daemon_reload: true
+
+- name: Enable remove dangling images timer
+  become_user: '{{ user.name }}'
+  systemd:
+    name: remove-dangling-images.timer
+    state: restarted
+    scope: user
+    enabled: true
+    daemon_reload: true
+
+- name: Ensure that dbus service works for user
+  become_user: '{{ user.name }}'
+  systemd:
+    name: dbus
+    state: started
+    scope: user
+    enabled: true
+    daemon_reload: true
+
+- name: Ensure that ~/.config/containers/systemd exists
+  file:
+    state: directory
+    path: ~{{ user.name }}/.config/containers/systemd
+    owner: '{{ user.name }}'
+    group: '{{ user.name }}'
+    mode: '0740'

@@ -1,0 +1,11 @@
+- name: Ensure that dnf-automatic package is present
+  package:
+    name: dnf-automatic
+    state: present
+
+- name: Ensure that dnf-automatic.timer is enabled and started
+  systemd:
+    name: dnf-automatic.timer
+    enabled: yes
+    state: started
+    daemon_reload: yes

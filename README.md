@@ -5,7 +5,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/mati365/hetzner-podman-bunjs-deploy?style=flat-square)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-Example of standalone Bun.js application deployment to Hetzner Cloud using Rootless Podman Quadlet systemd services. It can be used also as an simple alternative deployment method for Raspberry Pi. 
+Example of standalone Bun.js application deployment to Hetzner Cloud using Rootless Podman Quadlet systemd services. It can be used also as an simple alternative deployment method for Raspberry Pi.
 
 ## Description
 
@@ -28,15 +28,17 @@ Take a look at container file: https://github.com/Mati365/hetzner-podman-bunjs-d
 3. Set these envs:
 
     ```bash
+      WEBSITE_SSL_ENABLED=true
       HCLOUD_KEY: <your hcloud read & write key>
       REGISTRY_USERNAME: <specify username for podman registry>
       REGISTRY_PASSWORD: <specify password for podman registry>
       WEBSITE_DOMAIN: <specify site domain name without protocol e.g `example.site.org`>
     ```
 
-4. Paste your public SSH keys to all users dirs present in `infra/keys/authorized/`
-5. Run `deploy-hetzner.yml` workflow by `git push origin main:hetzner`
-6. Enter your `Hello World` site and enjoy!
+4. Generate ansible private keys and add it to the `infra/keys/ansible/` directory. Name it `id_ed25519`.
+5. Paste your public SSH keys to all users dirs present in `infra/keys/authorized/`
+6. Run `deploy-hetzner.yml` workflow by `git push origin main:hetzner`
+7. Enter your `Hello World` site and enjoy!
 
 ## Useful links
 

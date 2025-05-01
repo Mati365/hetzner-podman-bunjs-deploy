@@ -2,23 +2,23 @@
   file:
     path: '{{ item }}'
     state: directory
-    owner: deploy
-    group: deploy
-    mode: '0774'
+    owner: app_front
+    group: app_front
+    mode: '0750'
   loop:
-    - '{{ remote_paths.volumes_path }}/app-frontend'
+    - '{{ podman.volumes_dir }}/app-frontend'
 
 - name: app-frontend envs are synced
   register: app_frontend_env_file
   template:
     src: '{{ local_paths.envs_dir }}/frontend.env'
-    dest: '{{ remote_paths.volumes_path }}/app-frontend/frontend.env'
-    owner: deploy
-    group: deploy
+    dest: '{{ podman.volumes_dir }}/app-frontend/frontend.env'
+    owner: app_front
+    group: app_front
     mode: 0644
 
 - name: Ensure app-frontend.container exists
-  become_user: deploy
+  become_user: app_front
   register: app_frontend_container_file
   blockinfile:
     path: ~/.config/containers/systemd/app-frontend.container
@@ -33,11 +33,11 @@
       Image=0.0.0.0:5000/app-frontend:latest
       LogDriver=journald
       Label=io.containers.autoupdate=registry
-      Network=host
+      PublishPort=3004:3000
 
       Environment=APP_ENV=production
-      Environment=SERVER_PORT=3002
-      EnvironmentFile={{ remote_paths.volumes_path }}/app-frontend/frontend.env
+      Environment=SERVER_PORT=3004
+      EnvironmentFile={{ podman.volumes_dir }}/app-frontend/frontend.env
 
       [Service]
       TimeoutStartSec=15
@@ -48,7 +48,7 @@
       WantedBy=default.target
 
 - name: Ensure app-frontend service works
-  become_user: deploy
+  become_user: app_front
   ignore_errors: yes
   systemd:
     scope: user

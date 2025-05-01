@@ -1,0 +1,31 @@
+- name: Copy autoupdate containers service
+  template:
+    src: autoupdate-containers.service.j2
+    dest: "~{{ user.name }}/.config/systemd/user/autoupdate-containers.service"
+    mode: 0644
+    owner: '{{ user.name }}'
+    group:  '{{ user.name }}'
+
+- name: Copy autoupdate containers timer
+  template:
+    src: autoupdate-containers.timer.j2
+    dest: "~{{ user.name }}/.config/systemd/user/autoupdate-containers.timer"
+    mode: 0644
+    owner:  '{{ user.name }}'
+    group:  '{{ user.name }}'
+
+- name: Enable autoupdate containers service
+  become_user: '{{ user.name }}'
+  systemd:
+    name: autoupdate-containers.service
+    enabled: true
+    scope: user
+    daemon_reload: true
+
+- name: Enable autoupdate containers timer
+  become_user: '{{ user.name }}'
+  systemd:
+    name: autoupdate-containers.timer
+    state: restarted
+    scope: user
+    enabled: true
