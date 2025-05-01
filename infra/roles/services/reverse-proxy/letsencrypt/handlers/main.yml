@@ -1,14 +1,11 @@
 - name: Bootstrap SSL
   become_user: nginx
   when: website.ssl and website.domain
-  shell: |
-    # Check if certificate exists and is self-signed
+  shell: |-
     if [ -f "{{ podman.volumes_dir }}/letsencrypt/conf/live/{{ website.domain }}/fullchain.pem" ]; then
-      # Check if certificate is self-signed by looking at the issuer
-      is_self_signed=$(openssl x509 -in "{{ podman.volumes_dir }}/letsencrypt/conf/live/{{ website.domain }}/fullchain.pem" -issuer -noout | grep -i 'CN={{ website.domain }}')
+      is_self_signed=$(openssl x509 -in "{{ podman.volumes_dir }}/letsencrypt/conf/live/{{ website.domain }}/fullchain.pem" -issuer -noout | grep -i "CN={{ website.domain }}")
 
       if [ -n "$is_self_signed" ]; then
-        # Certificate is self-signed, replace with Let's Encrypt certificate
         rm -rf {{ podman.volumes_dir }}/letsencrypt/conf/*
 
         podman run \
@@ -21,7 +18,6 @@
         podman kill -s SIGHUP systemd-nginx
       fi
     else
-      # No certificate exists yet, something went wrong
       echo "Error: Expected certificate files not found"
       exit 1
     fi
