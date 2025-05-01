@@ -35,10 +35,9 @@ Take a look at container file: https://github.com/Mati365/hetzner-podman-bunjs-d
       WEBSITE_DOMAIN: <specify site domain name without protocol e.g `example.site.org`>
     ```
 
-4. Generate ansible private keys and add it to the `infra/keys/ansible/` directory. Name it `id_ed25519`.
-5. Paste your public SSH keys to all users dirs present in `infra/keys/authorized/`
-6. Run `deploy-hetzner.yml` workflow by `git push origin main:hetzner`
-7. Enter your `Hello World` site and enjoy!
+4. Paste your public SSH keys to all users dirs present in `infra/keys/authorized/`
+5. Run `deploy-hetzner.yml` workflow by `git push origin main:hetzner`
+6. Enter your `Hello World` site and enjoy!
 
 ## Useful links
 
