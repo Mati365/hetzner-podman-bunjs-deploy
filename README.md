@@ -41,6 +41,7 @@ Take a look at container file: https://github.com/Mati365/hetzner-podman-bunjs-d
       REGISTRY_USERNAME: <specify username for podman registry>
       REGISTRY_PASSWORD: <specify password for podman registry>
       WEBSITE_DOMAIN: <specify site domain name without protocol e.g `example.site.org`>
+      SSH_PRIVATE_KEY: <specify key used by Ansible>
     ```
 
 4. Paste your public SSH keys to all users dirs present in `infra/keys/authorized/`
