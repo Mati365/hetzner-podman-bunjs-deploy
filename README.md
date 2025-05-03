@@ -32,7 +32,7 @@ Take a look at container file: https://github.com/Mati365/hetzner-podman-bunjs-d
 
 ## How to run it?
 
-1. Create empty project on hetzner.com, add primary IP named `app-primary-ip`
+1. Create empty project on hetzner.com, add primary IP named `app-primary-ip` placed in Helsinki
 2. Point your DNS to `app-primary-ip` IPv4 address
 3. Set these envs:
 
